@@ -1,0 +1,23 @@
+[project]
+name = "fraud-detection"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+authors = [
+    { name = "Austin Wong", email = "256239685+aw1192@users.noreply.github.com" }
+]
+requires-python = ">=3.12"
+dependencies = [
+    "dvc[s3]>=3.67.1",
+    "mlflow>=3.16.0",
+    "pandas>=3.0.5",
+    "scikit-learn>=1.9.1",
+    "torch>=2.14.0",
+]
+
+[project.scripts]
+fraud-detection = "fraud_detection:main"
+
+[build-system]
+requires = ["uv_build>=0.12.5,<0.13.0"]
+build-backend = "uv_build"
