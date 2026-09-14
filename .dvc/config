@@ -1,0 +1,5 @@
+[core]
+    remote = myremote
+['remote "myremote"']
+    url = s3://european-fraud-detection-163120011996-us-west-1-an/dvc-storage
+    profile = fraud-detection
