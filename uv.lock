@@ -1277,6 +1277,7 @@ dependencies = [
     { name = "dvc", extra = ["s3"] },
     { name = "mlflow" },
     { name = "pandas" },
+    { name = "pyyaml" },
     { name = "scikit-learn" },
     { name = "torch" },
 ]
@@ -1286,6 +1287,7 @@ requires-dist = [
     { name = "dvc", extras = ["s3"], specifier = ">=3.67.1" },
     { name = "mlflow", specifier = ">=3.16.0" },
     { name = "pandas", specifier = ">=3.0.5" },
+    { name = "pyyaml", specifier = ">=6.0.3" },
     { name = "scikit-learn", specifier = ">=1.9.1" },
     { name = "torch", specifier = ">=2.14.0" },
 ]
