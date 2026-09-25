@@ -3,3 +3,4 @@
 seed: 10
 n_tune: 2
 n_splits: 2
+oof_path: 'oof_scores'

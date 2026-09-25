@@ -1,8 +1,9 @@
-import pandas as pd
-import numpy as np
-from sklearn.model_selection import train_test_split
-import yaml
 import os
+
+import numpy as np
+import pandas as pd
+import yaml
+from sklearn.model_selection import train_test_split
 
 os.makedirs('data/splits', exist_ok = True)
 
@@ -42,7 +43,7 @@ X_train, X_val, y_train, y_val = train_test_split(
 )
 
 # get a 70/15/15 split
-X_train, X_val, y_train, y_val = (d.reset_index(drop=True) for d in (X_train, X_val, y_train, y_val))
+X_train, X_val, y_train, y_val, X, y, X_test, y_test = (d.reset_index(drop=True) for d in (X_train, X_val, y_train, y_val, X, y, X_test, y_test))
 
 X_train.to_csv('data/splits/X_train.csv')
 X_val.to_csv('data/splits/X_val.csv')
@@ -50,5 +51,7 @@ y_train.to_csv('data/splits/y_train.csv')
 y_val.to_csv('data/splits/y_val.csv')
 X_test.to_csv('data/splits/X_test.csv')
 y_test.to_csv('data/splits/y_test.csv')
+X.to_csv('data/splits/X.csv')
+y.to_csv('data/splits/y.csv')
 
-print('Success, split data into training, validation, and test.')
+print('Success, split data into training (and split training), validation, and test.')
