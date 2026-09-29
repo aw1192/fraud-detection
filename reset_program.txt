@@ -1,0 +1,6 @@
+rm -rf mlruns
+rm -rf oof_scores
+rm -rf results
+rm -f mlflow.db
+
+echo 'Scores and results reset.'
