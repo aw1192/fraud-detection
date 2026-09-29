@@ -6,9 +6,17 @@ dist/
 wheels/
 *.egg-info
 
+
 # Virtual environments
 .venv
 
 # OS cruft
 .DS_Store
 
+# other files
+*.ipynb
+mlflow.db
+results.csv
+oof_scores/
+results/
+mlruns/

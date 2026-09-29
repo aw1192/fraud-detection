@@ -45,13 +45,13 @@ X_train, X_val, y_train, y_val = train_test_split(
 # get a 70/15/15 split
 X_train, X_val, y_train, y_val, X, y, X_test, y_test = (d.reset_index(drop=True) for d in (X_train, X_val, y_train, y_val, X, y, X_test, y_test))
 
-X_train.to_csv('data/splits/X_train.csv')
-X_val.to_csv('data/splits/X_val.csv')
-y_train.to_csv('data/splits/y_train.csv')
-y_val.to_csv('data/splits/y_val.csv')
-X_test.to_csv('data/splits/X_test.csv')
-y_test.to_csv('data/splits/y_test.csv')
-X.to_csv('data/splits/X.csv')
-y.to_csv('data/splits/y.csv')
+X_train.to_csv('data/splits/X_train.csv', index = False)
+X_val.to_csv('data/splits/X_val.csv', index = False)
+y_train.to_csv('data/splits/y_train.csv', index = False)
+y_val.to_csv('data/splits/y_val.csv', index = False)
+X_test.to_csv('data/splits/X_test.csv', index = False)
+y_test.to_csv('data/splits/y_test.csv', index = False)
+X.to_csv('data/splits/X.csv', index = False)
+y.to_csv('data/splits/y.csv', index = False)
 
 print('Success, split data into training (and split training), validation, and test.')
