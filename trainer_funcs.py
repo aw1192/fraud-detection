@@ -12,6 +12,8 @@ from sklearn.ensemble import IsolationForest
 from sklearn.linear_model import LogisticRegression
 from sklearn.metrics import average_precision_score
 from sklearn.preprocessing import StandardScaler
+import joblib
+import os
 
 with open("config.yaml") as f:
     config = yaml.safe_load(f)
@@ -26,10 +28,11 @@ def xgb_objective(trial, sgkf, X_train, y_train):
     objective = 'binary:logitraw'
     max_rounds = 3000
     early_stopping_rounds = 200
+    os.makedirs('oof_scores/xgb', exist_ok=True)  
 
     # hyperparameters
     scale_pos_weight = trial.suggest_float('scale_pos_weight', 0.2*legit_over_fraud, 5 * legit_over_fraud, log=True) 
-    eta = trial.suggest_float('learning_rate', 0.01, 0.5, log=True)
+    eta = trial.suggest_float('eta', 0.01, 0.5, log=True)
     subsample = trial.suggest_float('subsample', 0.5, 1)
     reg_lambda = trial.suggest_float('reg_lambda', 0.001, 10, log=True)
     max_depth = trial.suggest_int('max_depth', 2, 10)
@@ -96,6 +99,8 @@ def xgb_objective(trial, sgkf, X_train, y_train):
 # ISOLATION TREE OBJECTIVE FUNCTION
 
 def iso_objective(trial, sgkf, X_train, y_train):
+    os.makedirs('oof_scores/iso', exist_ok=True)
+      
 
     with mlflow.start_run(nested=True, run_name=f'iso_trial_{trial.number}') as child_run:
         oof_preds = np.zeros(len(X_train))
@@ -165,7 +170,7 @@ def train_tune(name, objective, n_trials, final):
             study.enqueue_trial({'n_estimators': 100, 'max_samples': 256, 'max_features': 1.0})
         elif objective == xgb_objective:
             study.enqueue_trial({
-                'learning_rate': 0.3,
+                'eta': 0.3,
                 'max_depth': 6,
                 'min_child_weight': 1,
                 'subsample': 1.0,
@@ -218,40 +223,65 @@ def best_csv(model: Literal['xgb', 'iso'], table):
     csv_idx = table.iloc[0]['tags.trial-number']
     
     if model == 'xgb':
-        best_csv = pd.read_csv(f'oof_scores/xgb/oof_trial_{csv_idx}.csv')
+        best_csv = pd.read_csv(f'oof_scores/xgb/oof_trial_{int(csv_idx)}.csv')
     elif model == 'iso':
-        best_csv = pd.read_csv(f'oof_scores/iso/oof_trial_{csv_idx}.csv')
+        best_csv = pd.read_csv(f'oof_scores/iso/oof_trial_{int(csv_idx)}.csv')
     else:
         raise Exception('Not valid model type.') 
 
     return best_csv
 
 # GET THE METAFEATURES OF TRAINING SET
-def meta_train_features(xgb_table, iso_table):
+def meta_train_features(xgb_table, iso_table, final =False):
     concat = pd.concat([best_csv('xgb', xgb_table), best_csv('iso', iso_table)], axis=1)
     concat = concat.drop(columns = 'y-train-iso')
     concat.rename(columns = {'y-train-xgb':'y-train'}, inplace = True)
     
-    scaler = StandardScaler()
+    iso_scaler = StandardScaler()
+    xgb_scaler = StandardScaler()
 
     # removes the base 2 exponential
     log_iso = -np.log2(np.array(concat['iso_oof_preds']).reshape(-1,1)) # outputs E[h(x)]/c(n)
-    concat['iso_oof_preds'] = scaler.fit_transform(log_iso)  
+    concat['iso_oof_preds'] = iso_scaler.fit_transform(log_iso)  
 
-    concat['xgb_oof_preds'] = scaler.fit_transform(np.array(concat['xgb_oof_preds']).reshape(-1,1))
+    concat['xgb_oof_preds'] = xgb_scaler.fit_transform(np.array(concat['xgb_oof_preds']).reshape(-1,1))
 
     meta_feat_data = concat[['xgb_oof_preds', 'iso_oof_preds']]
     meta_feat_labels = concat['y-train']
-    
+
+    os.makedirs('scalers', exist_ok = True)
+    if final:
+        joblib.dump(xgb_scaler, 'scalers/xgb_scaler_FINAL.pkl')
+        joblib.dump(iso_scaler, 'scalers/iso_scaler_FINAL.pkl')
+    else:
+        
+        joblib.dump(xgb_scaler, 'scalers/xgb_scaler.pkl')
+        joblib.dump(iso_scaler, 'scalers/iso_scaler.pkl')
+
     return meta_feat_data, meta_feat_labels
 
-# GENERATE META-VALIDATION FEATURES
-def meta_val_features(X_val, y_val, xgb_best, iso_best):
+# TRANSFORM THE VAL/TEST DATA ACCORDING TO THE SC
+def meta_val_features(X_val, y_val, xgb_best, iso_best, final = False):
+
+    if final:
+        xgb_scaler = joblib.load('scalers/xgb_scaler_FINAL.pkl')
+        xgb_scaler = joblib.load('scalers/iso_scaler_FINAL.pkl')
+    else:
+        xgb_scaler = joblib.load('scalers/xgb_scaler.pkl')
+        iso_scaler = joblib.load('scalers/iso_scaler.pkl')
+
     dval= xgb.DMatrix(X_val, label = y_val)
+
     # generating meta validation features
     meta_xgb = xgb_best.predict(dval)
-    meta_iso = iso_best.score_samples(X_val)
-    meta_val = pd.concat({'xgb_oof_preds': pd.Series(meta_xgb), 'iso_oof_preds': pd.Series(meta_iso)}, axis=1)
+    meta_iso = -iso_best.score_samples(X_val)
+
+    log_iso_val = -np.log2(np.array(meta_iso).reshape(-1, 1))  
+
+    meta_val = pd.DataFrame({
+        'xgb_oof_preds': xgb_scaler.transform(np.array(meta_xgb).reshape(-1, 1)).ravel(),
+        'iso_oof_preds': iso_scaler.transform(log_iso_val).ravel(),
+    })    
     return meta_val
 
 # META-LEARNER OBJECTIVE
@@ -270,6 +300,8 @@ def meta_objective(trial, concat_data, concat_labels, meta_val, y_val):
         return aucpr  
 
 def get_best_model():
+    os.makedirs('results', exist_ok=True)   
+
     df = pd.read_csv('results/log_reg.csv')
     run_id = df.iloc[0]['run_id']
     run = mlflow.get_run(run_id)
