@@ -1,7 +1,7 @@
 # config.yaml
 
 seed: 10
-n_tune: 2
-n_splits: 2
+n_tune: 100
+n_splits: 100
 oof_path: 'oof_scores'
 trial: True
