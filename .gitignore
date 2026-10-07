@@ -22,3 +22,7 @@ results/
 mlruns/
 test.txt
 *.pem
+scalers/
+/oof_scores
+/results
+/scalers

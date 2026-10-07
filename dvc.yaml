@@ -1,0 +1,38 @@
+stages:
+
+  clean:
+    cmd: 
+      - uv run python data-clean.py
+    deps: 
+      - data/raw/creditcard.csv
+    outs: 
+      - data/splits/
+
+  tune:
+    cmd: uv run python train_tune.py
+    deps:
+      - train_tune.py
+      - data/splits    
+      - trainer_funcs.py    
+    outs:
+      - oof_scores/
+      - results/
+      - mlflow.db
+      - scalers/
+      - mlruns/1
+      - mlruns/2
+      - mlruns/3
+
+  train_final:
+    cmd: uv run python train_final_model.py
+    deps:
+      - train_final_model.py
+      - data/splits/X.csv
+      - data/splits/y.csv
+      - data/splits/X_test.csv
+      - data/splits/y_test.csv
+      - results/
+      - trainer_funcs.py
+      - scalers/
+    outs:
+      - mlruns/0/

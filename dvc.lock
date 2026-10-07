@@ -1,0 +1,110 @@
+schema: '2.0'
+stages:
+  clean:
+    cmd:
+    - uv run python data-clean.py
+    deps:
+    - path: data/raw/creditcard.csv
+      hash: md5
+      md5: e90efcb83d69faf99fcab8b0255024de
+      size: 150828752
+    outs:
+    - path: data/splits/
+      hash: md5
+      md5: f6bf751fd910a5c65b56f8c1da20b95b.dir
+      size: 295388817
+      nfiles: 8
+  tune:
+    cmd: uv run python train_tune.py
+    deps:
+    - path: data/splits
+      hash: md5
+      md5: f6bf751fd910a5c65b56f8c1da20b95b.dir
+      size: 295388817
+      nfiles: 8
+    - path: train_tune.py
+      hash: md5
+      md5: 838fa03437521b94b8f9ee544627ab8d
+      size: 2095
+    - path: trainer_funcs.py
+      hash: md5
+      md5: e7874356d17fc43a5c1276811924edb9
+      size: 10893
+    outs:
+    - path: mlflow.db
+      hash: md5
+      md5: 576a7d0cceb7a84b15a018ff52f49adb
+      size: 3653632
+    - path: mlruns/1
+      hash: md5
+      md5: 020ab299efb8d235e2054eb6091746f5.dir
+      size: 10939205
+      nfiles: 27
+    - path: mlruns/2
+      hash: md5
+      md5: e510104928f537ab4aed0810c5f6a9c2.dir
+      size: 13043030
+      nfiles: 25
+    - path: mlruns/3
+      hash: md5
+      md5: a1afe764a7fc73487b8905e3ef025ca4.dir
+      size: 359202
+      nfiles: 18
+    - path: oof_scores/
+      hash: md5
+      md5: b2e6abfc869de40c255b3071bd34793e.dir
+      size: 17026708
+      nfiles: 4
+    - path: results/
+      hash: md5
+      md5: a792e56af9700eeb62cb2e4ae2a901d3.dir
+      size: 6736
+      nfiles: 3
+    - path: scalers/
+      hash: md5
+      md5: 82cad3f8fd04a64d4396710d125ddd76.dir
+      size: 1182
+      nfiles: 2
+  train_final:
+    cmd: uv run python train_final_model.py
+    deps:
+    - path: data/splits/X.csv
+      hash: md5
+      md5: 1f3fd3321e473608c8d91261d91a783f
+      size: 135235347
+    - path: data/splits/X_test.csv
+      hash: md5
+      md5: 15560653ca1f28a17bedd555f252cd1c
+      size: 23864187
+    - path: data/splits/y.csv
+      hash: md5
+      md5: 1a7cff830d52af07b20c42a4cb52f911
+      size: 484176
+    - path: data/splits/y_test.csv
+      hash: md5
+      md5: baf31a865909888ed426580c462d1908
+      size: 85450
+    - path: results/
+      hash: md5
+      md5: a792e56af9700eeb62cb2e4ae2a901d3.dir
+      size: 6736
+      nfiles: 3
+    - path: scalers/
+      hash: md5
+      md5: 82cad3f8fd04a64d4396710d125ddd76.dir
+      size: 1182
+      nfiles: 2
+    - path: train_final_model.py
+      hash: md5
+      md5: de0d83b6bd7473c1109a0ed66d38989e
+      size: 4217
+    - path: trainer_funcs.py
+      hash: md5
+      md5: e7874356d17fc43a5c1276811924edb9
+      size: 10893
+    outs:
+    - path: mlruns/0/
+      hash: md5
+      md5: e548bc75d84ba81a65bdf502e077772f.dir
+      size: 3422810
+      nfiles: 35
