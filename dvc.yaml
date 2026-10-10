@@ -4,6 +4,7 @@ stages:
     cmd: 
       - uv run python data-clean.py
     deps: 
+      - config.yaml
       - data/raw/creditcard.csv
     outs: 
       - data/splits/
@@ -11,6 +12,7 @@ stages:
   tune:
     cmd: uv run python train_tune.py
     deps:
+      - config.yaml
       - train_tune.py
       - data/splits    
       - trainer_funcs.py    
@@ -26,6 +28,7 @@ stages:
   train_final:
     cmd: uv run python train_final_model.py
     deps:
+      - config.yaml
       - train_final_model.py
       - data/splits/X.csv
       - data/splits/y.csv
