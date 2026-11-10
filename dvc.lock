@@ -2,16 +2,20 @@ schema: '2.0'
 stages:
   clean:
     cmd:
-    - uv run python data-clean.py
+    - uv run python scripts/data_clean.py
     deps:
     - path: config.yaml
       hash: md5
-      md5: 27d9d8afa7010c8a9677394ee1511bfc
-      size: 81
+      md5: 39ad295be275509df35461127c05d8af
+      size: 59
     - path: data/raw/creditcard.csv
       hash: md5
       md5: e90efcb83d69faf99fcab8b0255024de
       size: 150828752
+    - path: scripts/data_clean.py
+      hash: md5
+      md5: c303105cfa1e313a411f341af8c6135f
+      size: 1778
     outs:
     - path: data/splits/
       hash: md5
@@ -36,41 +40,41 @@ stages:
       size: 2095
     - path: trainer_funcs.py
       hash: md5
-      md5: e7874356d17fc43a5c1276811924edb9
-      size: 10893
+      md5: cbe249f5f035618e9212e64980161a9c
+      size: 10960
     outs:
     - path: mlflow.db
       hash: md5
-      md5: 266e85235d9f995b4215cd1160dc7395
-      size: 4235264
+      md5: d57a89a839b14be254192e0aa5394d00
+      size: 4112384
     - path: mlruns/1
       hash: md5
-      md5: 06cfd78d47605391dceb829553edb64d.dir
-      size: 12448161
+      md5: bfc6e6b85aef340f5c08ce2c35a0c1ae.dir
+      size: 12037368
       nfiles: 27
     - path: mlruns/2
       hash: md5
-      md5: 4ed728128dff61243f89904d531707f4.dir
-      size: 17069842
+      md5: 45c7fb7a489f81b8081182fb94698fb7.dir
+      size: 13670494
       nfiles: 25
     - path: mlruns/3
       hash: md5
-      md5: f2ac16f48e596e001ae22c49919b354c.dir
-      size: 359490
+      md5: bd50e985969065f4e3b3c4e32d840d38.dir
+      size: 356239
       nfiles: 18
     - path: oof_scores/
       hash: md5
-      md5: 31127adcc0f59c884f0bdcd56a826a03.dir
-      size: 17136249
+      md5: de4be3bc50a6884187cffe9601d8f656.dir
+      size: 17052259
       nfiles: 4
     - path: results/
       hash: md5
-      md5: 662d5457bf669ba5a6b3c3abbe12c219.dir
-      size: 6736
+      md5: 336208bc44fcf4258a6087e27c630ff4.dir
+      size: 6731
       nfiles: 3
     - path: scalers/
       hash: md5
-      md5: f3f910d6b1c0c667b5dca4f541ab80f6.dir
+      md5: f0e674591d87c63f7a97e71d89561a6c.dir
       size: 1182
       nfiles: 2
   train_final:
@@ -98,25 +102,69 @@ stages:
       size: 85450
     - path: results/
       hash: md5
-      md5: 662d5457bf669ba5a6b3c3abbe12c219.dir
-      size: 6736
+      md5: 336208bc44fcf4258a6087e27c630ff4.dir
+      size: 6731
       nfiles: 3
     - path: scalers/
       hash: md5
-      md5: f3f910d6b1c0c667b5dca4f541ab80f6.dir
+      md5: f0e674591d87c63f7a97e71d89561a6c.dir
       size: 1182
       nfiles: 2
     - path: train_final_model.py
       hash: md5
-      md5: de0d83b6bd7473c1109a0ed66d38989e
-      size: 4217
+      md5: 8727a22bd7bfeb4d5ee993588c31a218
+      size: 4476
     - path: trainer_funcs.py
       hash: md5
-      md5: e7874356d17fc43a5c1276811924edb9
-      size: 10893
+      md5: cbe249f5f035618e9212e64980161a9c
+      size: 10960
     outs:
     - path: mlruns/0/
       hash: md5
-      md5: d21ee81b75518e5671bdc3fa21c5a36e.dir
-      size: 6730466
+      md5: b69c83bb918cd9dff970f7b58f17a4a1.dir
+      size: 3015534
       nfiles: 35
+  train:
+    cmd: uv run python -m fraud_detection.train
+    deps:
+    - path: config.yaml
+      hash: md5
+      md5: 39ad295be275509df35461127c05d8af
+      size: 59
+    - path: data/splits/
+      hash: md5
+      md5: f6bf751fd910a5c65b56f8c1da20b95b.dir
+      size: 295388817
+      nfiles: 8
+    - path: src/fraud_detection/base_learner.py
+      hash: md5
+      md5: 175f30255f68bcc7a47dd0e37b3b77ec
+      size: 11621
+    - path: src/fraud_detection/meta_learner.py
+      hash: md5
+      md5: 217689793627fab4d0d0c8548a9498fa
+      size: 3681
+    - path: src/fraud_detection/train.py
+      hash: md5
+      md5: 331131b2093a4b7ce8ef0a05822732d2
+      size: 5066
+    outs:
+    - path: artifacts/oof_scores/
+      hash: md5
+      md5: 051d3567830eb53d4e4d8dfe026cbbeb.dir
+      size: 27551242
+      nfiles: 6
+    - path: artifacts/scalers/
+      hash: md5
+      md5: 1bf9dc96afa098e8d304ac0c0f32ee75.dir
+      size: 2364
+      nfiles: 4
+    - path: mlflow.db
+      hash: md5
+      md5: cd96457486dc0370e55ff76e29e1f274
+      size: 4046848
+    - path: mlruns/
+      hash: md5
+      md5: 9893926d58c7899d8c77121610f0c702.dir
+      size: 39838162
+      nfiles: 102
