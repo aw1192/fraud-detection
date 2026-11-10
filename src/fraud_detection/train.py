@@ -11,6 +11,7 @@ from functools import partial
 
 import mlflow
 import pandas as pd
+import xgboost as xgb
 import yaml
 from sklearn.metrics import average_precision_score
 from sklearn.model_selection import StratifiedKFold
@@ -27,8 +28,20 @@ N_TUNE = config['n_tune']
 sgkf = StratifiedKFold(n_splits = N_SPLITS, shuffle = False)
 
 
+# aucpr of each base learner on its own, to compare against the stacked model
+def base_aucprs(X_eval, y_eval, xgb_model, iso_model):
+    xgb_preds = xgb_model.predict(xgb.DMatrix(X_eval))
+    iso_preds = -iso_model.score_samples(X_eval)  # negated so higher = more anomalous, as in tuning
+
+    return {
+        'xgb': average_precision_score(y_eval, xgb_preds),
+        'iso': average_precision_score(y_eval, iso_preds)
+    }
+
+
 # logs one section's best models and scalers into a single named run
-def log_best_models(run_name, xgb_model, iso_model, meta_model, metric_name, metric, final = False):
+# metrics: {metric name: value}, e.g. {'val-aucpr': ..., 'xgb-val-aucpr': ...}
+def log_best_models(run_name, xgb_model, iso_model, meta_model, metrics, final = False):
     suffix = '_FINAL' if final else ''
 
     mlflow.set_experiment('best_models')
@@ -36,7 +49,7 @@ def log_best_models(run_name, xgb_model, iso_model, meta_model, metric_name, met
         mlflow.log_params({f'xgb_{k}': v for k, v in xgb_best_param.items()})
         mlflow.log_params({f'iso_{k}': v for k, v in iso_best_param.items()})
         mlflow.log_params({f'meta_{k}': v for k, v in meta_best_param.items()})
-        mlflow.log_metric(metric_name, metric)
+        mlflow.log_metrics(metrics)
 
         mlflow.xgboost.log_model(xgb_model, name = 'xgb')
         mlflow.sklearn.log_model(iso_model, name = 'iso')
@@ -92,8 +105,13 @@ mlflow.autolog(disable = True)
 # ===== LOG BEST TUNING MODELS =====
 meta_best = train('logreg', meta_feat, meta_label, meta_best_param)
 val_aucpr = average_precision_score(y_val, meta_best.predict_proba(meta_val)[:,1])
+base_val = base_aucprs(X_val, y_val, xgb_best, iso_best)
 
-log_best_models('tuning', xgb_best, iso_best, meta_best, 'val-aucpr', val_aucpr)
+log_best_models('tuning', xgb_best, iso_best, meta_best, {
+    'val-aucpr': val_aucpr,
+    'xgb-val-aucpr': base_val['xgb'],
+    'iso-val-aucpr': base_val['iso']
+})
 
 
 # =========== FINAL RUN (X, tested on X_test) ============
@@ -121,8 +139,13 @@ meta_final = train('logreg', meta_feat_final, meta_label_final, meta_best_param)
 
 # ===== TEST SCORE =====
 test_aucpr = average_precision_score(y_test, meta_final.predict_proba(meta_test)[:,1])
+base_test = base_aucprs(X_test, y_test, xgb_final, iso_final)
 
-log_best_models('final', xgb_final, iso_final, meta_final, 'test-aucpr', test_aucpr, final=True)
+log_best_models('final', xgb_final, iso_final, meta_final, {
+    'test-aucpr': test_aucpr,
+    'xgb-test-aucpr': base_test['xgb'],
+    'iso-test-aucpr': base_test['iso']
+}, final=True)
 
-print(f'Validation AUCPR: {val_aucpr}')
-print(f'Final model AUCPR on test data: {test_aucpr}')
+print(f'Validation AUCPR  stack: {val_aucpr:.4f}  xgb: {base_val["xgb"]:.4f}  iso: {base_val["iso"]:.4f}')
+print(f'Test AUCPR        stack: {test_aucpr:.4f}  xgb: {base_test["xgb"]:.4f}  iso: {base_test["iso"]:.4f}')
