@@ -26,3 +26,7 @@ scalers/
 /oof_scores
 /results
 /scalers
+/mlruns
+/notebooks
+/deprecated
+TODO.md

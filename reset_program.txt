@@ -1,7 +1,0 @@
-rm -rf mlruns
-rm -rf oof_scores
-rm -rf results
-rm -f mlflow.db
-rm -rf scalers
-
-echo 'Scores and results reset.'

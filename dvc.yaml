@@ -1,41 +1,26 @@
 stages:
 
   clean:
-    cmd: 
-      - uv run python data-clean.py
-    deps: 
+    cmd:
+      - uv run python scripts/data_clean.py
+    deps:
       - config.yaml
+      - scripts/data_clean.py
       - data/raw/creditcard.csv
-    outs: 
+    outs:
       - data/splits/
 
-  tune:
-    cmd: uv run python train_tune.py
+  # tuning on X_train/X_val, then the final fit on X and score on X_test
+  train:
+    cmd: uv run python -m fraud_detection.train
     deps:
       - config.yaml
-      - train_tune.py
-      - data/splits    
-      - trainer_funcs.py    
+      - data/splits/
+      - src/fraud_detection/train.py
+      - src/fraud_detection/base_learner.py
+      - src/fraud_detection/meta_learner.py
     outs:
-      - oof_scores/
-      - results/
+      - artifacts/oof_scores/
+      - artifacts/scalers/
       - mlflow.db
-      - scalers/
-      - mlruns/1
-      - mlruns/2
-      - mlruns/3
-
-  train_final:
-    cmd: uv run python train_final_model.py
-    deps:
-      - config.yaml
-      - train_final_model.py
-      - data/splits/X.csv
-      - data/splits/y.csv
-      - data/splits/X_test.csv
-      - data/splits/y_test.csv
-      - results/
-      - trainer_funcs.py
-      - scalers/
-    outs:
-      - mlruns/0/
+      - mlruns/
