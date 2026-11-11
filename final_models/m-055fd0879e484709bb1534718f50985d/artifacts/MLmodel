@@ -1,0 +1,22 @@
+artifact_path: /home/ubuntu/fraud-detection/mlruns/4/models/m-055fd0879e484709bb1534718f50985d/artifacts
+flavors:
+  python_function:
+    data: model.ubj
+    env:
+      conda: conda.yaml
+      virtualenv: python_env.yaml
+    loader_module: mlflow.xgboost
+    python_version: 3.12.15
+  xgboost:
+    code: null
+    data: model.ubj
+    model_class: xgboost.core.Booster
+    model_format: ubj
+    xgb_version: 3.4.1
+mlflow_version: 3.16.0
+model_id: m-055fd0879e484709bb1534718f50985d
+model_size_bytes: 947818
+model_uuid: m-055fd0879e484709bb1534718f50985d
+prompts: null
+run_id: 4edd2453bd054fcba94ab1c09b4c410e
+utc_time_created: '2026-11-10 11:02:33.803913'
